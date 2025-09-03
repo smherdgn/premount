@@ -1,6 +1,30 @@
+# OS/Editor
 .DS_Store
-/node_modules/
+Thumbs.db
+.vscode/
+.idea/
 
-# React Router
-/.react-router/
-/build/
+# Dependencies (all packages)
+node_modules/
+
+# Build outputs (root and subprojects like rr6-demo)
+build/
+dist/
+.vite/
+*.tsbuildinfo
+
+# React Router generated types/cache
+.react-router/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+bun-debug.log*
+*.log
+logs/
+
+# Environment files
+.env
+.env.*
+!.env.example
