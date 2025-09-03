@@ -9,13 +9,14 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function clientLoader() {
-  // Demo gecikme: geçişte overlay'in görünmesini sağla (SPA mode)
+  // Simulate a small delay so navigation shows as "loading"
+  // and the transparent overlay becomes visible during transitions.
   await new Promise((r) => setTimeout(r, 400));
   return null;
 }
 
 export default function Home() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // prefer programmatic nav to keep it SPA
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div className="flex-1 flex flex-col items-center gap-10 min-h-0">

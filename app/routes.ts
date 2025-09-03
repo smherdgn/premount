@@ -1,3 +1,5 @@
+// Route manifest for React Router build. These module paths are code-split
+// by Vite so each route loads lazily on navigation.
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [

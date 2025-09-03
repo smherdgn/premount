@@ -1,14 +1,18 @@
 import type { Route } from "./+types/about";
 import { useLoaderData, Form } from "react-router";
 import { useEffect, useState } from "react";
+// About demonstrates both clientLoader (SPA data) and a client-side fetch
+// (JSONPlaceholder) so you can see network requests in DevTools.
 
 function AboutPage() {
+  // Type of useLoaderData derives from clientLoader in SPA mode
   const data = useLoaderData<typeof clientLoader>();
   const [demo, setDemo] = useState<any>(null);
   const [demoError, setDemoError] = useState<string | null>(null);
   const [demoLoading, setDemoLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    // Client-side fetch to show a visible request in the browser
     let alive = true;
     setDemoLoading(true);
     fetch("https://jsonplaceholder.typicode.com/users/1")
@@ -51,6 +55,7 @@ function AboutPage() {
         </section>
       )}
 
+      {/* Client-side action (SPA): handled by clientAction below */}
       <Form method="post" className="space-x-2">
         <input name="foo" placeholder="foo" className="border p-2" />
         <button type="submit" className="px-3 py-2 bg-blue-600 text-white rounded">Kaydet</button>
@@ -69,6 +74,7 @@ export const Component = AboutPage;
 export default AboutPage;
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  // In SPA mode we use clientLoader so logs & requests appear in DevTools.
   let app: unknown = null;
     console.log("about.loader");
   try {
@@ -80,11 +86,13 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
     app = { error: "api/about erişilemedi", detail: String(e) };
   }
   // Demo: küçük gecikme, lazy route + overlay hissi için
+  // Small delay to make the transition overlay noticeable
   await new Promise((r) => setTimeout(r, 800));
   return { app, from: "about.loader", at: new Date().toISOString() };
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
+  // Simple demo mutate handled on the client in SPA mode
   const formData = await request.formData();
   console.log( "about.action");
 

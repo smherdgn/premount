@@ -1,3 +1,5 @@
+// Root layout: keep previous screen visible during navigation and
+// show a semi-transparent overlay using useNavigation().
 import {
   isRouteErrorResponse,
   Links,
@@ -7,8 +9,9 @@ import {
   ScrollRestoration,
   useNavigation,
 } from "react-router";
-// Suspense is not required here since we're not lazily rendering route elements
-import TransparentLoader from "./components/TransparentLoader";
+// We don't wrap <Outlet/> with Suspense here because route elements
+// are not lazily rendered; overlay provides the transition feedback.
+import TransparentLoader from "./components/TransparentLoader"; // overlay spinner component
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -46,10 +49,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const navigation = useNavigation();
+  // Consider navigation "busy" when loading or submitting to trigger overlay
   const busy = navigation.state === "loading" || navigation.state === "submitting";
   return (
     <div className="relative min-h-[100dvh]">
+      {/* Render active route. Previous content remains visible during transitions */}
       <Outlet />
+      {/* Global transparent loader overlay shown only while navigating */}
       {busy && <TransparentLoader />}
     </div>
   );

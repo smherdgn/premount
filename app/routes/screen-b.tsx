@@ -1,5 +1,6 @@
 import type { Route } from "./+types/screen-b";
 import { useNavigate } from "react-router";
+// Another minimal screen mirroring Screen A to show transitions clearly.
 
 
 
@@ -18,7 +19,7 @@ export const Component = ScreenB;
 export default ScreenB;
 
 export async function clientLoader({}: Route.ClientLoaderArgs) {
-  // Küçük bir gecikme: geçişte overlay görünür, lazy yükleme daha net hissedilir
+  // Small delay so navigation shows loading and overlay is visible
   await new Promise((r) => setTimeout(r, 700));
   return null;
 }

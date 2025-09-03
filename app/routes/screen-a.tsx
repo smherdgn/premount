@@ -1,5 +1,6 @@
 import type { Route } from "./+types/screen-a";
 import { useNavigate } from "react-router";
+// Minimal screen to demonstrate route-level code-splitting and clientLoader delay.
 
 
 function ScreenA() {
@@ -17,7 +18,7 @@ export const Component = ScreenA;
 export default ScreenA;
 
 export async function clientLoader({}: Route.ClientLoaderArgs) {
-  // Küçük bir gecikme: geçişte overlay görünür, lazy yükleme daha net hissedilir
+  // Small delay so navigation shows loading and overlay is visible
   await new Promise((r) => setTimeout(r, 600));
   return null;
 }
