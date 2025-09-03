@@ -5,7 +5,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useNavigation,
 } from "react-router";
+// Suspense is not required here since we're not lazily rendering route elements
+import TransparentLoader from "./components/TransparentLoader";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -42,7 +45,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const navigation = useNavigation();
+  const busy = navigation.state === "loading" || navigation.state === "submitting";
+  return (
+    <div className="relative min-h-[100dvh]">
+      <Outlet />
+      {busy && <TransparentLoader />}
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
