@@ -1,32 +1,12 @@
 import type { Route } from "./+types/about";
 import { useLoaderData, Form } from "react-router";
-import { useEffect, useState } from "react";
-// About demonstrates both clientLoader (SPA data) and a client-side fetch
-// (JSONPlaceholder) so you can see network requests in DevTools.
+// About demonstrates clientLoader (SPA data). We fetch both a local API
+// and JSONPlaceholder inside the loader so the global overlay stays visible
+// during the entire transition and data fetch.
 
 function AboutPage() {
   // Type of useLoaderData derives from clientLoader in SPA mode
   const data = useLoaderData<typeof clientLoader>();
-  const [demo, setDemo] = useState<any>(null);
-  const [demoError, setDemoError] = useState<string | null>(null);
-  const [demoLoading, setDemoLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    // Client-side fetch to show a visible request in the browser
-    let alive = true;
-    setDemoLoading(true);
-    fetch("https://jsonplaceholder.typicode.com/users/1")
-      .then((r) => {
-        if (!r.ok) throw new Error("JSONPlaceholder hata");
-        return r.json();
-      })
-      .then((j) => alive && setDemo(j))
-      .catch((e) => alive && setDemoError(String(e)))
-      .finally(() => alive && setDemoLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   return (
     <div className="container mx-auto p-4 space-y-6 relative">
@@ -35,15 +15,15 @@ function AboutPage() {
       <section className="space-y-2">
         <h2 className="text-lg font-medium">JSONPlaceholder Kullanıcı</h2>
         <div className="rounded border border-gray-200 dark:border-gray-800 p-3">
-          {demoLoading && <div>Yükleniyor...</div>}
-          {demoError && <div className="text-red-600">Hata: {demoError}</div>}
-          {demo && (
+          {data.demo ? (
             <ul className="space-y-1">
-              <li><span className="text-gray-500">Ad:</span> {demo.name}</li>
-              <li><span className="text-gray-500">Email:</span> {demo.email}</li>
-              <li><span className="text-gray-500">Şehir:</span> {demo.address?.city}</li>
-              <li><span className="text-gray-500">Şirket:</span> {demo.company?.name}</li>
+              <li><span className="text-gray-500">Ad:</span> {data.demo.name}</li>
+              <li><span className="text-gray-500">Email:</span> {data.demo.email}</li>
+              <li><span className="text-gray-500">Şehir:</span> {data.demo.address?.city}</li>
+              <li><span className="text-gray-500">Şirket:</span> {data.demo.company?.name}</li>
             </ul>
+          ) : (
+            <div>Veri yüklenemedi.</div>
           )}
         </div>
       </section>
@@ -76,19 +56,24 @@ export default AboutPage;
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   // In SPA mode we use clientLoader so logs & requests appear in DevTools.
   let app: unknown = null;
-    console.log("about.loader");
+  let demo: any | null = null;
+  console.log("about.clientLoader");
   try {
-    const appUrl = new URL("/api/about", request.url);
-    const res = await fetch(appUrl);
-    if (res.ok) app = await res.json();
-    else app = { error: `api/about status ${res.status}` };
+    // Lazily import the service helpers so even fetch logic lives in a separate chunk
+    const api = await import("../services/about.api");
+    const [appData, demoData] = await Promise.all([
+      api.fetchAppInfo(),
+      api.fetchDemoUser(),
+    ]);
+    app = appData;
+    demo = demoData;
   } catch (e) {
-    app = { error: "api/about erişilemedi", detail: String(e) };
+    app = { error: "about.json erişilemedi", detail: String(e) };
+    demo = null;
   }
-  // Demo: küçük gecikme, lazy route + overlay hissi için
   // Small delay to make the transition overlay noticeable
   await new Promise((r) => setTimeout(r, 800));
-  return { app, from: "about.loader", at: new Date().toISOString() };
+  return { app, demo, from: "about.clientLoader", at: new Date().toISOString() };
 }
 
 export async function clientAction({ request }: Route.ClientActionArgs) {

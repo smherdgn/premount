@@ -1,33 +1,14 @@
 import { Form, useLoaderData } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 type LoaderData = {
   app: unknown;
+  demo: unknown;
   from: string;
   at: string;
 };
 
 export function Component() {
   const data = useLoaderData() as LoaderData;
-  const [demo, setDemo] = useState<any>(null);
-  const [demoError, setDemoError] = useState<string | null>(null);
-  const [demoLoading, setDemoLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    let alive = true;
-    setDemoLoading(true);
-    fetch("https://jsonplaceholder.typicode.com/users/1")
-      .then((r) => {
-        if (!r.ok) throw new Error("JSONPlaceholder error");
-        return r.json();
-      })
-      .then((j) => alive && setDemo(j))
-      .catch((e) => alive && setDemoError(String(e)))
-      .finally(() => alive && setDemoLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   return (
     <main style={{ padding: 24 }}>
@@ -37,16 +18,18 @@ export function Component() {
       <section style={{ marginTop: 16 }}>
         <h3>JSONPlaceholder User</h3>
         <div style={{ padding: 12, border: "1px solid #ddd", borderRadius: 8 }}>
-          {demoLoading && <div>Loading…</div>}
-          {demoError && <div style={{ color: "#c00" }}>Error: {demoError}</div>}
-          {demo && (
+          {(() => {
+            const demo = data?.demo as any;
+            if (!demo) return <div style={{ color: "#c00" }}>Error: user data unavailable</div>;
+            return (
             <ul>
               <li>Name: {demo.name}</li>
               <li>Email: {demo.email}</li>
               <li>City: {demo.address?.city}</li>
               <li>Company: {demo.company?.name}</li>
             </ul>
-          )}
+            );
+          })()}
         </div>
       </section>
 
@@ -78,18 +61,31 @@ export function Component() {
 }
 
 export async function loader() {
-  let app: unknown = null;
-  try {
-    // Local file served by Vite (public folder)
-    const res = await fetch("/api/about.json");
-    if (res.ok) app = await res.json();
-    else app = { error: `api/about.json status ${res.status}` };
-  } catch (e) {
-    app = { error: "api/about.json unreachable", detail: String(e) };
-  }
+  // Fetch both local app info and remote demo user as part of the navigation.
+  const [app, demo] = await Promise.all([
+    (async () => {
+      try {
+        const res = await fetch("/api/about.json");
+        if (res.ok) return await res.json();
+        return { error: `api/about.json status ${res.status}` };
+      } catch (e) {
+        return { error: "api/about.json unreachable", detail: String(e) };
+      }
+    })(),
+    (async () => {
+      try {
+        const res = await fetch("https://jsonplaceholder.typicode.com/users/1");
+        if (!res.ok) return { error: `JSONPlaceholder status ${res.status}` };
+        return await res.json();
+      } catch (e) {
+        return { error: "JSONPlaceholder unreachable", detail: String(e) };
+      }
+    })(),
+  ]);
+
   // Delay to clearly show the overlay
   await new Promise((r) => setTimeout(r, 1000));
-  return { app, from: "about.loader", at: new Date().toISOString() } as LoaderData;
+  return { app, demo, from: "about.loader", at: new Date().toISOString() } as LoaderData;
 }
 
 export async function action({ request }: { request: Request }) {
